@@ -1,3 +1,4 @@
+import hmac
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -16,6 +17,27 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ── Password gate ─────────────────────────────────────────────────────────────
+def _check_password() -> bool:
+    def _password_entered():
+        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
+            st.session_state["_password_correct"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["_password_correct"] = False
+
+    if st.session_state.get("_password_correct", False):
+        return True
+
+    st.text_input("Password", type="password", on_change=_password_entered, key="password")
+    if "_password_correct" in st.session_state:
+        st.error("Incorrect password — try again.")
+    return False
+
+if not _check_password():
+    st.stop()
+# ─────────────────────────────────────────────────────────────────────────────
 
 st.markdown(
     """
